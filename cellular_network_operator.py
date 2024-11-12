@@ -146,6 +146,17 @@ class CellularNetworkOperator:
         except mysql.connector.Error as err:
             raise Exception(f"Failed to fetch data from {table_name}: {err}")
 
+    def list_users(self):
+        """
+        List all users in the database
+        """
+        query = "SELECT User_name, User_phone_number FROM User"
+        try:
+            self.cursor.execute(query)
+            return self.cursor.fetchall() or {}
+        except mysql.connector.Error as err:
+            raise Exception(f"Failed to fetch users: {err}")
+
     def get_user_details(self, phone_number: str) -> Dict[str, Any]:
         """
         Get details of a specific user.
@@ -159,6 +170,43 @@ class CellularNetworkOperator:
             return self.cursor.fetchone() or {}
         except mysql.connector.Error as err:
             raise Exception(f"Failed to fetch user details: {err}")
+
+    def update_user_email(self, phone_number: str, new_email: str) -> Dict[str, Any]:
+        """
+        Change the email ID of a user
+
+        Args:
+            phone_number: User's phone number
+        """
+        try:
+            query = """
+                UPDATE User
+                SET User_email = %s
+                WHERE User_phone_number = %s
+            """
+            self.cursor.execute(query, (new_email, phone_number))
+            return self.cursor.fetchone() or {}
+        except mysql.connector.Error as err:
+            raise Exception(f"Failed to fetch user details: {err}")
+
+    def get_user_usage(self, phone_number):
+        """
+        Get a single user's usage statistics
+        """
+
+        query = """
+            SELECT SUM(usage_quantum) AS total_usage, Tower_location
+            FROM uses, User, Towers
+            WHERE
+                User.IMEI = uses.IMEI AND
+                User_phone_number = %s
+            GROUP BY Towers.Tower_ID
+        """
+        try:
+            self.cursor.execute (query, (phone_number,))
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            raise Exception(f"Failed to get usage statistics: {err}")
 
     def record_tower_usage(self, imei: str, tower_id: int,
                            usage_quantum: int) -> None:

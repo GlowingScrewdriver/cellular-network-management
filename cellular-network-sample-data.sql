@@ -1,3 +1,5 @@
+use cellular_network;
+
 -- First, let's add some devices
 INSERT INTO Device (device_type, IMEI) VALUES
     ('smartphone', '123456789012345'),
