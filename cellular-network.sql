@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS plan_spec (
     data_limit_GB INT NOT NULL,
     call_limit INT NOT NULL,
     sms_limit INT NOT NULL,
+    validity_days INT NOT NULL,
     PRIMARY KEY (Plan_ID),
     CHECK (Plan_price >= 0),             -- Added constraints for valid values
     CHECK (data_limit_GB >= 0),
@@ -78,7 +79,7 @@ CREATE TABLE IF NOT EXISTS uses (
     IMEI CHAR(15) NOT NULL,
     Tower_ID INT NOT NULL,
     time_stamp TIMESTAMP NOT NULL,
-    PRIMARY KEY (IMEI, Tower_ID),
+    PRIMARY KEY (IMEI, time_stamp),
     FOREIGN KEY (IMEI) REFERENCES Device(IMEI),
     FOREIGN KEY (Tower_ID) REFERENCES Towers(Tower_ID),
     CHECK (usage_quantum >= 0)           -- Added constraint for valid usage
@@ -90,6 +91,7 @@ CREATE VIEW plan_popularity AS
     GROUP BY Plan_ID
     ORDER BY user_count DESC;
 
+-- Function to find load on a given tower in a given time period
 DELIMITER |
 CREATE FUNCTION IF NOT EXISTS tower_load (tower_id INT, period_start TIMESTAMP, period_end TIMESTAMP)
 RETURNS DECIMAL(10,2)                    -- Changed to DECIMAL for more precise load calculation
@@ -119,9 +121,39 @@ BEGIN
 END |
 DELIMITER ;
 
+-- Trigger to detect whether the user's plan is valid or not
+DELIMITER |
+CREATE TRIGGER check_plan_validity
+BEFORE INSERT ON uses
+FOR EACH ROW
+BEGIN
+    SELECT COUNT(*)
+    INTO @valid_plans
+    FROM User_plan, plan_spec
+    WHERE
+        User_plan.IMEI = NEW.IMEI and
+        User_plan.Plan_ID = plan_spec.Plan_ID and
+        DATE_ADD(User_plan.date_of_purchase, INTERVAL plan_spec.validity_days DAY) > NEW.time_stamp;
+
+    IF @valid_plans = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'User does not have any valid pack';
+    END IF;
+END |
+DELIMITER ;
+
 -- Sample plan data
 INSERT INTO plan_spec VALUES 
-    (1, "Balanced", 200, 10, 80, 200),
-    (2, "Entertainment", 300, 40, 60, 60),
-    (3, "Talktime Add-on", 50, 0, 100, 0),
-    (4, "Data Add-on", 50, 10, 0, 0);      -- Changed ID to 4 for the last plan
+    (1, "Balanced", 200, 10, 80, 200, 60),
+    (2, "Entertainment", 300, 40, 60, 60, 80),
+    (3, "Talktime Add-on", 50, 0, 100, 0, 40),
+    (4, "Data Add-on", 50, 10, 0, 0, 30);      -- Changed ID to 4 for the last plan
+
+
+CREATE USER IF NOT EXISTS 'analyst'; -- Analysts who work with the database
+
+-- Restricted information
+CREATE VIEW user_filtered
+AS
+    SELECT User_phone_number, IMEI, city, state FROM User;
+GRANT SELECT ON user_filtered TO 'analyst';
