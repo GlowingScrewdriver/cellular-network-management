@@ -20,6 +20,13 @@ INSERT INTO Business_user (Business_user_ID, Business_name, GSTIN) VALUES
     (3, 'Reliance Jio Ltd', '33AABCU9603R1ZJ'),
     (4, 'BSNL Corporation', '19AABCU9603R1ZJ');
 
+INSERT INTO Business_user (Business_user_ID, Business_name, GSTIN) VALUES
+    (1, 'Zara Fashion Ltd', '29AADCU9604R1ZJ'),
+    (2, 'Levi Strauss India Pvt Ltd', '27AADCU9604R1ZJ'),
+    (3, 'McDonalds India Pvt Ltd', '33AADCU9604R1ZJ'),
+    (4, 'H&M India Pvt Ltd', '22AADCU9604R1ZJ');
+
+
 -- Add contracts for business users
 INSERT INTO Contract (Contract_ID, Contract_Details, Start_date, end_date, Business_user_ID) VALUES
     (1, 1001, '2023-01-01 00:00:00', '2024-12-31 23:59:59', 1),
