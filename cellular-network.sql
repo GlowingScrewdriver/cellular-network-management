@@ -91,6 +91,14 @@ CREATE VIEW plan_popularity AS
     GROUP BY Plan_ID
     ORDER BY user_count DESC;
 
+-- All currently running plans
+CREATE VIEW running_plans AS
+    SELECT User_plan.*
+        FROM User_plan, plan_spec
+        WHERE
+            User_plan.Plan_ID = plan_spec.Plan_ID AND
+            DATE_ADD(User_plan.date_of_purchase, INTERVAL plan_spec.validity_days DAY) > NOW();
+
 -- Function to find load on a given tower in a given time period
 DELIMITER |
 CREATE FUNCTION IF NOT EXISTS tower_load (tower_id INT, period_start TIMESTAMP, period_end TIMESTAMP)

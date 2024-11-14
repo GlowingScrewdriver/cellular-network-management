@@ -231,7 +231,7 @@ class CellularNetworkGUI:
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         ttk.Label(content_frame, text="Select Table:").grid(row=0, column=0, padx=5, pady=5)
-        tables = ['Available Plans', 'Plan Popularity', 'User Details']
+        tables = ['Available Plans', 'Plan Popularity', 'User Details', 'Inactive Users']
         table_select = ttk.Combobox(content_frame, values=tables)
         table_select.grid(row=0, column=1, padx=5, pady=5)
 
@@ -258,6 +258,8 @@ class CellularNetworkGUI:
                         data = [self.network.get_user_details(phone)]
                     else:
                         return
+                elif selected == 'Inactive Users':
+                    data = list(self.network.get_idle_users())
 
                 if data and len(data) > 0:
                     columns = list(data[0].keys())

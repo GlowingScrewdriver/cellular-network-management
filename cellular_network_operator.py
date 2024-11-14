@@ -208,6 +208,27 @@ class CellularNetworkOperator:
         except mysql.connector.Error as err:
             raise Exception(f"Failed to get usage statistics: {err}")
 
+    def get_idle_users (self):
+        """
+        Get users who have no valid plan
+        """
+        query = """
+            SELECT User_name, User_Email, t1.IMEI
+            FROM (
+                SELECT * FROM User_plan
+                EXCEPT
+                SELECT * FROM running_plans
+            ) AS t1, User
+            WHERE
+                User.IMEI = t1.IMEI AND
+                User.User_phone_number = t1.User_phone_number
+        """
+        try:
+            self.cursor.execute (query)
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            raise Exception(f"Failed to get usage statistics: {err}")
+
     def record_tower_usage(self, imei: str, tower_id: int,
                            usage_quantum: int) -> None:
         """
