@@ -4,6 +4,7 @@ from typing import Dict, Generator, Any, Optional
 
 
 class CellularNetworkOperator:
+
     def __init__(self, host: str = '127.0.0.1', user: str = 'root',
                  password: str = '', database: str = 'cellular_network'):
         """Initialize database connection with error handling."""
@@ -104,11 +105,9 @@ class CellularNetworkOperator:
 
     def get_plans(self) -> Generator[Dict[str, Any], None, None]:
         """Retrieve all available plans."""
-        return self._get_table("plan_spec")
+        return self.get_table("plan_spec")
 
-    def get_plan_popularity(self) -> Generator[Dict[str, Any], None, None]:
-        """Get plan popularity statistics."""
-        return self._get_table("plan_popularity")
+
 
     def get_tower_load(self, tower_id: int,
                        period_start: Optional[datetime] = None,
@@ -126,12 +125,12 @@ class CellularNetworkOperator:
         if period_end is None:
             period_end = datetime.now()
 
-        query = "SELECT tower_load(%s, %s, %s) as load"
+        query = "SELECT tower_load(%s, %s, %s) as `load`"
         self.cursor.execute(query, (tower_id, period_start, period_end))
         result = self.cursor.fetchone()
         return result['load'] if result else 0.0
 
-    def _get_table(self, table_name: str) -> Generator[Dict[str, Any], None, None]:
+    def get_table(self, table_name: str) -> Generator[Dict[str, Any], None, None]:
         """
         Generic method to fetch all rows from a table.
 
@@ -198,7 +197,6 @@ class CellularNetworkOperator:
             SELECT SUM(usage_quantum) AS total_usage, Tower_location
             FROM uses, User, Towers
             WHERE
-                User.IMEI = uses.IMEI AND
                 User_phone_number = %s
             GROUP BY Towers.Tower_ID
         """
@@ -217,7 +215,7 @@ class CellularNetworkOperator:
             FROM (
                 SELECT * FROM User_plan
                 EXCEPT
-                SELECT * FROM running_plans
+                SELECT * FROM running_plans_
             ) AS t1, User
             WHERE
                 User.IMEI = t1.IMEI AND
