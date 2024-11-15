@@ -9,18 +9,16 @@ class CellularNetworkGUI:
         self.root.title("Cellular Network Management System")
         self.root.geometry("800x600")
 
-        # Set theme colors
         self.style = ttk.Style()
-        self.style.configure(".", background="#f0f4f8")  # Light blue-gray background
+        self.style.configure(".", background="#f0f4f8")
         self.style.configure("Custom.TButton",
-                             background="#4a90e2",  # Blue buttons
-                             foreground="black")  # Changed text color to black
+                             background="#4a90e2",
+                             foreground="black")
         self.style.configure("Home.TButton",
-                             background="#2ecc71",  # Green for home button
-                             foreground="black",  # Changed text color to black
+                             background="#2ecc71",
+                             foreground="black",
                              padding=10)
 
-        # Apply background color to root window
         self.root.configure(bg="#f0f4f8")
 
         try:
@@ -35,44 +33,41 @@ class CellularNetworkGUI:
             root.destroy()
             return
 
-        # Create notebook for tabs
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
-        # Create tabs
         self.home_frame = self.create_home_tab()
         self.register_device_frame = self.create_register_device_tab()
         self.register_user_frame = self.create_register_user_tab()
         self.purchase_plan_frame = self.create_purchase_plan_tab()
+        self.tower_usage_frame = self.create_tower_usage_tab()
         self.view_data_frame = self.create_view_data_tab()
+
 
     def create_home_tab(self) -> ttk.Frame:
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Home')
 
-        # Create centered content
         content_frame = ttk.Frame(frame)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Title
         title = ttk.Label(content_frame,
                           text="Cellular Network Database\nManagement System",
                           font=('Helvetica', 24, 'bold'),
                           justify='center')
         title.pack(pady=20)
 
-        # Subtitle
         subtitle = ttk.Label(content_frame,
                              text="Welcome to the management interface",
                              font=('Helvetica', 14))
         subtitle.pack(pady=10)
 
-        # Navigation buttons
         buttons = [
             ("Register Device", 1),
             ("Register User", 2),
             ("Purchase Plan", 3),
-            ("View Data", 4)
+            ("Record Tower Usage", 4),
+            ("View Data", 5)
         ]
 
         for text, tab_index in buttons:
@@ -85,7 +80,6 @@ class CellularNetworkGUI:
         return frame
 
     def add_home_button(self, frame, content_frame):
-        # Create a container frame for the home button
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=100, column=0, columnspan=3, sticky='se', padx=10, pady=10)
 
@@ -99,7 +93,6 @@ class CellularNetworkGUI:
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Register Device')
 
-        # Create centered content frame
         content_frame = ttk.Frame(frame)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -138,7 +131,6 @@ class CellularNetworkGUI:
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Register User')
 
-        # Create centered content frame
         content_frame = ttk.Frame(frame)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -151,7 +143,7 @@ class CellularNetworkGUI:
             ('Apartment:', 'apt_name'), ('Street:', 'street_name'),
             ('City:', 'city'), ('Pincode:', 'pincode'),
             ('State:', 'state'), ('Email:', 'email'),
-            ('Identity Proof:', 'identity_proof'), ('IMEI:', 'imei')
+            ('Identity Proof(Number):', 'identity_proof'), ('IMEI:', 'imei')
         ]
 
         entries = {}
@@ -182,7 +174,6 @@ class CellularNetworkGUI:
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Purchase Plan')
 
-        # Create centered content frame
         content_frame = ttk.Frame(frame)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -191,8 +182,14 @@ class CellularNetworkGUI:
                                                                                                 pady=10)
 
         ttk.Label(content_frame, text="Plan ID:").grid(row=1, column=0, padx=5, pady=5)
-        plan_id_entry = ttk.Entry(content_frame)
-        plan_id_entry.grid(row=1, column=1, padx=5, pady=5)
+        plans = {
+            "Balanced (ID: 1)": "1",
+            "Entertainment (ID: 2)": "2",
+            "Talk-time Add On (ID: 3)": "3",
+            "Data Add On (ID: 4)": "4"
+        }
+        plan_id_combobox = ttk.Combobox(content_frame, values=list(plans.keys()), state="readonly")
+        plan_id_combobox.grid(row=1, column=1, padx=5, pady=5)
 
         ttk.Label(content_frame, text="IMEI:").grid(row=2, column=0, padx=5, pady=5)
         imei_entry = ttk.Entry(content_frame)
@@ -204,13 +201,18 @@ class CellularNetworkGUI:
 
         def purchase_plan():
             try:
+                # Get the selected Plan ID from the combobox
+                selected_plan = plan_id_combobox.get()
+                plan_id = plans.get(selected_plan)  # Extract the numeric ID
+
+                # Call network purchase plan method
                 self.network.purchase_plan(
-                    int(plan_id_entry.get()),
+                    int(plan_id),
                     imei_entry.get(),
                     phone_entry.get()
                 )
                 messagebox.showinfo("Success", "Plan purchased successfully!")
-                plan_id_entry.delete(0, tk.END)
+                plan_id_combobox.set('')  # Reset combobox selection
                 imei_entry.delete(0, tk.END)
                 phone_entry.delete(0, tk.END)
             except Exception as e:
@@ -219,6 +221,62 @@ class CellularNetworkGUI:
         purchase_btn = ttk.Button(content_frame, text="Purchase Plan", style="Custom.TButton", command=purchase_plan)
         purchase_btn.grid(row=4, column=0, columnspan=2, pady=20)
 
+        # Adding a 'Home' button function (assuming it exists in the class)
+        self.add_home_button(frame, content_frame)
+        return frame
+
+    def create_tower_usage_tab(self) -> ttk.Frame:
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text='Record Tower Usage')
+
+        content_frame = ttk.Frame(frame)
+        content_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        ttk.Label(content_frame, text="Record Tower Usage", font=('Helvetica', 14, 'bold')).grid(row=0, column=0,
+                                                                                                 columnspan=2,
+                                                                                                 pady=10)
+
+        # Input fields for IMEI, Tower ID, and Usage Quantum
+        ttk.Label(content_frame, text="IMEI:").grid(row=1, column=0, padx=5, pady=5)
+        imei_entry = ttk.Entry(content_frame)
+        imei_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        ttk.Label(content_frame, text="Tower ID:").grid(row=2, column=0, padx=5, pady=5)
+        tower_id_entry = ttk.Entry(content_frame)
+        tower_id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        ttk.Label(content_frame, text="Usage Quantum:").grid(row=3, column=0, padx=5, pady=5)
+        usage_quantum_entry = ttk.Entry(content_frame)
+        usage_quantum_entry.grid(row=3, column=1, padx=5, pady=5)
+
+        def record_tower_usage():
+            try:
+                imei = imei_entry.get()
+                tower_id = int(tower_id_entry.get())
+                usage_quantum = int(usage_quantum_entry.get())
+
+                # Call the network method to record tower usage
+                self.network.record_tower_usage(imei, tower_id, usage_quantum)
+
+                # Show success message
+                messagebox.showinfo("Success", "Tower usage recorded successfully!")
+
+                # Clear inputs
+                imei_entry.delete(0, tk.END)
+                tower_id_entry.delete(0, tk.END)
+                usage_quantum_entry.delete(0, tk.END)
+
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid numeric values for Tower ID and Usage Quantum.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+        # Button to record tower usage
+        record_btn = ttk.Button(content_frame, text="Record Tower Usage", style="Custom.TButton",
+                                command=record_tower_usage)
+        record_btn.grid(row=4, column=0, columnspan=2, pady=20)
+
+        # Add a 'Home' button to return to the main tab
         self.add_home_button(frame, content_frame)
         return frame
 
@@ -226,12 +284,11 @@ class CellularNetworkGUI:
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='View Data')
 
-        # Create centered content frame
         content_frame = ttk.Frame(frame)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         ttk.Label(content_frame, text="Select Table:").grid(row=0, column=0, padx=5, pady=5)
-        tables = ['Available Plans', 'Plan Popularity', 'User Details', 'Inactive Users']
+        tables = ['all users','Available Plans', 'Plan Popularity', 'User Details','User Usage', 'Inactive Users',"Tower Load","Multiple plans","User distribution based on city","Device type distribution","Average tower capacity by business users","Currently running plans"]
         table_select = ttk.Combobox(content_frame, values=tables)
         table_select.grid(row=0, column=1, padx=5, pady=5)
 
@@ -250,8 +307,9 @@ class CellularNetworkGUI:
             try:
                 if selected == 'Available Plans':
                     data = list(self.network.get_plans())
+                # q1
                 elif selected == 'Plan Popularity':
-                    data = list(self.network.get_plan_popularity())
+                    data = list(self.network.get_table("plan_popularity_"))
                 elif selected == 'User Details':
                     phone = simpledialog.askstring("Input", "Enter phone number:")
                     if phone:
@@ -260,6 +318,41 @@ class CellularNetworkGUI:
                         return
                 elif selected == 'Inactive Users':
                     data = list(self.network.get_idle_users())
+                elif selected == 'User Usage':
+                    phone = simpledialog.askstring("Input", "Enter phone number:")
+                    if phone:
+                        data= self.network.get_user_usage(phone)
+                    else:
+                        return
+                elif selected == 'Tower Load':
+
+                    tower_id = simpledialog.askstring("Input", "Enter Tower ID:")
+
+                    if not tower_id or not tower_id.isdigit():
+                        messagebox.showerror("Error", "Invalid Tower ID. Please enter a valid integer.")
+                        return
+
+                    # Display the tower load
+                    data=[{f"Tower Load for Tower ID {tower_id}":self.network.get_tower_load(int(tower_id))},{}]
+
+                elif selected == "Multiple plans":
+                    data=list(self.network.get_table("multi_plan_"))
+
+                elif selected == "User distribution based on city":
+                    data=list(self.network.get_table("user_distribution_"))
+
+                elif selected == "Device type distribution":
+                    data=list(self.network.get_table("device_distribution_"))
+
+                elif selected == "Average tower capacity by business users":
+                    data=list(self.network.get_table("avg_tower_capac_bu_"))
+
+                elif selected == "Currently running plans":
+                    data=list(self.network.get_table("running_plans_"))
+
+                elif selected == 'all users':
+                    data = list(self.network.list_users())
+
 
                 if data and len(data) > 0:
                     columns = list(data[0].keys())
