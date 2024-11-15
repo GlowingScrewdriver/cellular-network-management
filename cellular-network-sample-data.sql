@@ -1,6 +1,6 @@
 use cellular_network;
 
--- First, let's add some devices
+-- Add devices
 INSERT INTO Device (device_type, IMEI) VALUES
     ('smartphone', '123456789012345'),
     ('smartphone', '234567890123456'),
@@ -15,17 +15,10 @@ INSERT INTO Device (device_type, IMEI) VALUES
 
 -- Add business users
 INSERT INTO Business_user (Business_user_ID, Business_name, GSTIN) VALUES
-    (1, 'Airtel Networks Ltd', '29AABCU9603R1ZJ'),
-    (2, 'Vodafone Idea Ltd', '27AABCU9603R1ZJ'),
-    (3, 'Reliance Jio Ltd', '33AABCU9603R1ZJ'),
-    (4, 'BSNL Corporation', '19AABCU9603R1ZJ');
-
-INSERT INTO Business_user (Business_user_ID, Business_name, GSTIN) VALUES
     (1, 'Zara Fashion Ltd', '29AADCU9604R1ZJ'),
     (2, 'Levi Strauss India Pvt Ltd', '27AADCU9604R1ZJ'),
     (3, 'McDonalds India Pvt Ltd', '33AADCU9604R1ZJ'),
     (4, 'H&M India Pvt Ltd', '22AADCU9604R1ZJ');
-
 
 -- Add contracts for business users
 INSERT INTO Contract (Contract_ID, Contract_Details, Start_date, end_date, Business_user_ID) VALUES
@@ -57,13 +50,20 @@ INSERT INTO User (User_name, User_phone_number, apt_name, street_name, city, pin
     ('Rajesh Shah', '9876543216', 'Sun City', 'SV Road', 'Mumbai', '400003', 'Maharashtra', 'rajesh@email.com', 12351, '789012345678901'),
     ('Anita Sharma', '9876543217', 'Moon Tower', 'CP', 'Delhi', '110002', 'Delhi', 'anita@email.com', 12352, '890123456789012');
 
+-- Add plan specifications
+INSERT INTO plan_spec VALUES
+    (1, "Balanced", 200, 10, 80, 200, 60),
+    (2, "Entertainment", 300, 40, 60, 60, 80),
+    (3, "Talktime Add-on", 50, 0, 100, 0, 40),
+    (4, "Data Add-on", 50, 10, 0, 0, 30);
+
 -- Add user plans (subscriptions)
 INSERT INTO User_plan (Plan_ID, IMEI, User_phone_number, date_of_purchase) VALUES
     (1, '123456789012345', '9876543210', '2024-10-15 10:00:00'),
     (2, '234567890123456', '9876543211', '2024-11-11 11:00:00'),
     (1, '345678901234567', '9876543212', '2024-10-17 12:00:00'),
     (2, '456789012345678', '9876543213', '2024-09-18 13:00:00'),
-    (3, '123456789012345', '9876543210', '2024-11-12 14:00:00'),  -- Additional plan for first user
+    (3, '123456789012345', '9876543210', '2024-11-12 14:00:00'),
     (4, '567890123456789', '9876543214', '2024-10-20 15:00:00'),
     (1, '678901234567890', '9876543215', '2023-11-13 16:00:00'),
     (2, '789012345678901', '9876543216', '2023-09-22 17:00:00'),
@@ -71,45 +71,15 @@ INSERT INTO User_plan (Plan_ID, IMEI, User_phone_number, date_of_purchase) VALUE
 
 -- Add usage data
 INSERT INTO uses (usage_quantum, IMEI, Tower_ID, time_stamp) VALUES
-    (50, '123456789012345', 1, '2024-01-15 10:30:00'),
-    (30, '234567890123456', 3, '2024-01-16 11:30:00'),
-    (40, '345678901234567', 2, '2024-01-17 12:30:00'),
-    (60, '456789012345678', 5, '2024-01-18 13:30:00'),
-    (45, '567890123456789', 6, '2024-01-20 15:30:00'),
-    -- (35, '678901234567890', 5, '2024-01-21 16:30:00'),
-    -- (55, '789012345678901', 1, '2024-01-22 17:30:00'),
-    (25, '890123456789012', 3, '2024-01-23 18:30:00'),
-    -- Additional usage records for time series data
-    (40, '123456789012345', 2, '2024-02-15 10:30:00'),
-    (35, '234567890123456', 4, '2024-02-16 11:30:00'),
-    (45, '345678901234567', 1, '2024-02-17 12:30:00'),
-    (50, '456789012345678', 6, '2024-02-18 13:30:00');
+    (100, '123456789012345', 1, '2024-10-15 10:30:00'),
+    (150, '234567890123456', 3, '2024-10-16 11:30:00'),
+    (200, '345678901234567', 2, '2024-10-17 12:30:00'),
+    (350, '456789012345678', 5, '2024-10-18 13:30:00'),
+    (200, '567890123456789', 6, '2024-10-20 15:30:00'),
+    (250, '890123456789012', 3, '2024-10-23 18:30:00'),
+    (400, '123456789012345', 2, '2024-11-15 10:30:00'),
+    (350, '234567890123456', 4, '2024-11-16 11:30:00'),
+    (450, '345678901234567', 1, '2024-11-17 12:30:00'),
+    (500, '456789012345678', 6, '2024-11-18 13:30:00');
 
--- Let's test some queries to verify our data
 
--- 1. Check plan popularity
-SELECT p.Plan_name, COUNT(*) as subscribers
-FROM User_plan up
-JOIN plan_spec p ON p.Plan_ID = up.Plan_ID
-GROUP BY p.Plan_ID, p.Plan_name
-ORDER BY subscribers DESC;
-
--- 2. Check tower load for a specific tower
-SELECT tower_load(1, '2023-01-01 00:00:00', '2023-12-31 23:59:59') as load_factor;
-
--- 3. Check user distribution across cities
-SELECT city, COUNT(*) as user_count
-FROM User
-GROUP BY city
-ORDER BY user_count DESC;
-
--- 4. Check device type distribution
-SELECT device_type, COUNT(*) as device_count
-FROM Device
-GROUP BY device_type;
-
--- 5. Check average tower capacity by business user
-SELECT bu.Business_name, AVG(t.Tower_Capacity) as avg_capacity
-FROM Towers t
-JOIN Business_user bu ON bu.Business_user_ID = t.Business_user_ID
-GROUP BY bu.Business_user_ID, bu.Business_name;
